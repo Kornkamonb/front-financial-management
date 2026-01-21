@@ -1,61 +1,31 @@
-import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./components/Layout";
-import Loading from "./components/Loading";
-import { ThemeProvider } from "next-themes";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { getThemeColors, observeThemeChanges } from "./themeUtils";
 import { useState, useEffect } from "react";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import "./utility/Sweet_alert/Swal_custom.css";
 
 import {
   ThemeProvider as ThemeProvider_mui,
   createTheme,
 } from "@mui/material/styles";
-// Lazy load components
-const Summary = React.lazy(
-  () =>
-    import(
-      "@/pages/page-summary/financial-summary/main/main"
-    )
-);
-const ManageFinancial = React.lazy(
-  () =>
-    import("@/pages/page-manage/financial-manage/main/main")
-);
-
-
+import { getThemeColors, observeThemeChanges } from "./themeUtils";
+import AppRoutes from "@/routes/AppRoutes";
 
 function App() {
   const [themeColors, setThemeColors] = useState<any>({});
 
   useEffect(() => {
-    const updateColors = () => {
-      setThemeColors(getThemeColors()); // ดึงค่าทั้งหมดแล้วเก็บลง state
-    };
-    updateColors();
-    const observer = observeThemeChanges(updateColors);
-    return () => observer.disconnect();
+    const update = () => setThemeColors(getThemeColors());
+    update();
+    const ob = observeThemeChanges(update);
+    return () => ob.disconnect();
   }, []);
 
   const theme = createTheme({
-    breakpoints: {
-      values: {
-        xs: 375,
-        sm: 534,
-        md: 640,
-        lg: 1072,
-        xl: 1520,
-      },
-    },
-    typography: {
-      fontFamily: "'Inter Variable', 'sans-serif'",
-    },
+    breakpoints: { values: { xs: 375, sm: 534, md: 640, lg: 1072, xl: 1520 } },
+    typography: { fontFamily: "'Inter Variable', 'sans-serif'" },
     palette: {
       primary: { main: themeColors["primary"] || "#007bff" },
       secondary: { main: themeColors["secondary"] || "#6c757d" },
-      // accent: { main: themeColors["accent"] || "#ff5722" },
-      // neutral: { main: themeColors["neutral"] || "#3d4451" },
       error: { main: themeColors["error"] || "#dc3545" },
       warning: { main: themeColors["warning"] || "#ffc107" },
       info: { main: themeColors["info"] || "#17a2b8" },
@@ -73,54 +43,24 @@ function App() {
       MuiPaper: {
         styleOverrides: {
           root: {
-            border: `1px solid ${themeColors["base-300"] || "#e5e7eb"}`, // เส้นขอบของ Paper (Card, Dialog ฯลฯ)
+            border: `0px solid ${themeColors["base-300"] || "#e5e7eb"}`,
           },
         },
       },
       MuiSvgIcon: {
         styleOverrides: {
-          root: {
-            color: themeColors["primary"] || "inherit", // ใช้สี icon ตาม theme
-          },
+          root: { color: themeColors["primary"] || "inherit" },
         },
       },
     },
   });
+
   return (
     <ThemeProvider_mui theme={theme}>
       <ThemeProvider>
         <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route
-                path="/Smart-manpower-temporary-transfer"
-                element={<Layout />}
-              >
-                {/* Public Routes */}
-                <Route
-                  index
-                  element={
-                    <Navigate
-                      to="/Smart-manpower-temporary-transfer/send-manpower"
-                      replace
-                    />
-                  }
-                />
-                <Route
-                  path="/financial-management/manage"
-                  element={<ManageFinancial />}
-                />
-                <Route
-                  path="/financial-management/summary"
-                  element={<Summary />}
-                />
-               
-              </Route>
-            </Routes>
-          </Suspense>
+          <AppRoutes />
         </BrowserRouter>
-        <ToastContainer />
-        {/* <Snowfall snowflakeCount={20} /> */}
       </ThemeProvider>
     </ThemeProvider_mui>
   );
